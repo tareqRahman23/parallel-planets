@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Parallel Planets - Tabletop Diorama Action Strategy</title>
+    <link rel="stylesheet" href="./src/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="app-container">
+      <canvas id="game-canvas"></canvas>
+
+      <!-- Persistent Top Navigation / Purchase Bar (Farm Frenzy Style) -->
+      <div id="top-purchase-bar" class="top-purchase-bar">
+        <div class="purchase-creatures-group">
+          <button id="buy-rabbit-btn" class="creature-buy-btn" title="Purchase Rabbit (50 Coins, 1 Weight)">
+            <span class="buy-icon">🐰</span>
+            <div class="buy-meta">
+              <span class="buy-name">RABBIT</span>
+              <span class="buy-price">🟡 50</span>
+            </div>
+            <span class="buy-owned-badge" id="rabbit-owned-count">0</span>
+          </button>
+
+          <button id="buy-bull-btn" class="creature-buy-btn" title="Purchase Bull (250 Coins, 5 Weight)">
+            <span class="buy-icon">🐂</span>
+            <div class="buy-meta">
+              <span class="buy-name">BULL</span>
+              <span class="buy-price">🟡 250</span>
+            </div>
+            <span class="buy-owned-badge" id="bull-owned-count">0</span>
+          </button>
+
+          <button id="tool-carrot-btn" class="tool-toggle-btn" title="Plant Carrot Patch (3 Coins)">
+            <span class="tool-btn-icon">🥕</span>
+            <div class="buy-meta">
+              <span class="buy-name">CARROT</span>
+              <span class="buy-price">🟡 3</span>
+            </div>
+          </button>
+
+          <button id="tool-fertilizer-btn" class="tool-toggle-btn" title="Apply Fertilizer (1 Fertilizer)">
+            <span class="tool-btn-icon">🌱</span>
+            <div class="buy-meta">
+              <span class="buy-name">FERTILIZER</span>
+              <span class="buy-price" id="fertilizer-stock-text">x0</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="center-economy-group">
+          <div class="coins-badge">
+            <span class="coin-icon">🟡</span>
+            <div class="coins-content">
+              <span class="coins-label">COINS</span>
+              <span class="coins-value" id="coins-counter">100</span>
+            </div>
+          </div>
+
+          <div class="capacity-badge" id="warehouse-capacity-badge">
+            <span class="capacity-icon">📦</span>
+            <div class="warehouse-content">
+              <span class="warehouse-label">WAREHOUSE</span>
+              <span id="warehouse-capacity-text">0 / 20</span>
+            </div>
+            <button id="upgrade-warehouse-btn" class="btn-upgrade-wh" title="Upgrade Warehouse (Lvl 1: 150 Coins, Lvl 2: 300 Coins)">+</button>
+          </div>
+
+          <div class="nav-modals-group">
+            <button id="open-build-btn" class="nav-panel-btn" title="Open Build District">
+              <span>🏗️ BUILD</span>
+            </button>
+            <button id="open-roster-btn" class="nav-panel-btn" title="Open Creature Roster & Armor">
+              <span>📋 ROSTER</span>
+            </button>
+            <button id="open-market-btn" class="nav-panel-btn" title="Open Quick Sale Market">
+              <span>⚖️ MARKET</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="orders-group" id="orders-container">
+          <!-- Active Supply Order Cards rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Invasion Combat Top & Bottom HUD -->
+      <div id="invasion-hud" class="invasion-hud-layer hidden">
+        <div class="invasion-top-bar">
+          <div class="invasion-stars-box" id="invasion-stars-tracker">
+            <span>⭐ 0% Destr</span>
+          </div>
+          <div class="invasion-timer-box" id="invasion-battle-timer">
+            ⏱️ 03:00
+          </div>
+          <div class="invasion-loot-box" id="invasion-loot-tracker">
+            <span>🟡 0 Looted</span>
+          </div>
+        </div>
+
+        <div class="invasion-bottom-bar">
+          <div class="invasion-troops-bar" id="invasion-troops-cards">
+            <!-- Troop deployment cards -->
+          </div>
+          <div class="invasion-support-bar" id="invasion-support-card">
+            <!-- Selected support power -->
+          </div>
+          <button id="btn-invasion-retreat" class="btn-danger btn-retreat">
+            🏳️ RETREAT
+          </button>
+        </div>
+      </div>
+
+      <!-- HUD UI Layer -->
+      <div id="hud" class="hud-layer">
+        <!-- Top Left: Resource Counters -->
+        <div class="top-left-panel">
+          <div class="resource-group">
+            <div class="resource-group-heading">
+              <div class="resource-group-title">STORED RESOURCES</div>
+              <span class="warehouse-status" id="warehouse-status-text">READY</span>
+            </div>
+            <div class="resource-row-compact">
+              <span title="Stone">🪨 <strong id="stone-counter">0</strong></span>
+              <span title="Rabbit Fur">🧶 <strong id="fur-counter">0</strong></span>
+              <span title="Fertilizer">🌱 <strong id="fertilizer-counter">0</strong></span>
+              <span title="Thread Spool">🧵 <strong id="thread-counter">0</strong></span>
+              <span title="Fabric Fold">📜 <strong id="fabric-counter">0</strong></span>
+              <span title="Tech Parts">⚙️ <strong id="tech-parts-counter">0</strong></span>
+            </div>
+            <div class="production-readout" id="production-readout" aria-live="polite">
+              No production lines online
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Center: Objective / Raid Banner -->
+        <div class="top-center-panel">
+          <div class="objective-card" id="objective-card">
+            <div class="objective-header">
+              <span class="objective-icon">🎯</span>
+              <span class="objective-title">CURRENT MISSION</span>
+              <span id="mission-timer-text" style="font-family: var(--font-mono); font-weight: bold; font-size: 14px; margin-left: 10px; color: var(--color-tech-blue);">00:00</span>
+            </div>
+            <div class="objective-text" id="objective-text">
+              Complete the Stone Supply Order & buy your first Rabbit
+            </div>
+          </div>
+          <div id="raid-warning-panel" class="raid-warning-panel hidden">
+            🚨 ALIEN RAID INCOMING: <span id="raid-warning-timer">15s</span>
+          </div>
+        </div>
+
+        <!-- Top Right: Audio Mute -->
+        <div class="top-right-panel">
+          <button id="pause-game-btn" class="icon-btn pause-game-btn" title="Pause game (P or Escape)" aria-label="Pause game">Ⅱ</button>
+          <button id="audio-toggle-btn" class="icon-btn" title="Toggle Sound" aria-label="Toggle Sound">
+            <span id="audio-icon">🔊</span>
+          </button>
+        </div>
+
+        <!-- Notification Banner (Milestones) -->
+        <div id="milestone-banner" class="milestone-banner hidden">
+          <div class="milestone-content">
+            <span class="milestone-icon" id="milestone-icon">✨</span>
+            <span class="milestone-text" id="milestone-text">Mining Drill Online!</span>
+          </div>
+        </div>
+
+        <!-- Bottom Left: Control Hints Panel -->
+        <div class="bottom-left-panel" id="controls-hint-panel">
+          <div class="controls-card">
+            <div class="controls-row"><span class="key-tag">Left Click</span> Collect / Harvest / Place</div>
+            <div class="controls-row"><span class="key-tag">Right Drag</span> Pan Camera</div>
+            <div class="controls-row"><span class="key-tag">Wheel</span> Zoom</div>
+            <div class="controls-row"><span class="key-tag">Space</span> Center Camera</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overlays -->
+      <div id="screen-fade" class="screen-fade-layer"></div>
+
+      <section id="main-menu" class="main-menu-overlay" aria-label="Main menu">
+        <div class="main-menu-card">
+          <div class="menu-kicker">TABLETOP PLANETARY STRATEGY</div>
+          <h1>PARALLEL<br><span>PLANETS</span></h1>
+          <p class="main-menu-lede">Grow a colony, run its supply chain, then take the fight to an enemy world.</p>
+          <div class="menu-actions">
+            <button id="main-menu-play-btn" class="primary-btn menu-play-btn">BEGIN EXPEDITION</button>
+            <button id="main-menu-help-btn" class="menu-text-btn" aria-expanded="false">How to play</button>
+          </div>
+          <div id="main-menu-help" class="menu-help hidden">
+            <div><strong>Home:</strong> mine stone, feed creatures, and build your economy.</div>
+            <div><strong>Industry:</strong> the Drill runs itself; click refining machines to start each batch.</div>
+            <div><strong>Invasion:</strong> load your army into the rocket, then deploy around the enemy base.</div>
+          </div>
+          <div class="menu-footer">P / ESC pauses an active expedition</div>
+        </div>
+      </section>
+
+      <section id="pause-menu" class="pause-overlay hidden" aria-label="Paused game" aria-modal="true" role="dialog">
+        <div class="pause-card">
+          <div class="menu-kicker">SIMULATION HALTED</div>
+          <h2>PAUSED</h2>
+          <p>Your colony, machines, raids, and invasion timer are all frozen.</p>
+          <button id="resume-game-btn" class="primary-btn">RESUME EXPEDITION</button>
+          <button id="pause-wiki-btn" class="menu-text-btn wiki-toggle-btn" aria-expanded="false">Open field wiki</button>
+          <div id="pause-wiki" class="pause-wiki hidden">
+            <div class="wiki-heading"><span>◈</span><div><small>FIELD WIKI</small><strong>VERDANT HOME // ACT I</strong></div></div>
+            <article class="wiki-entry">
+              <h3>Two worlds, one sky</h3>
+              <p>Every expedition begins on Verdant Home: a young settlement under the shadow of a neighboring enemy world. Build enough momentum to cross the void before its forces can overwhelm your colony.</p>
+            </article>
+            <article class="wiki-entry">
+              <h3>The fork</h3>
+              <p>Choose where your tempo goes. Technology strengthens extraction, production, and defenses; creatures become workers, companions, and the core of your invasion force. Strong colonies weave both together.</p>
+            </article>
+            <article class="wiki-entry">
+              <h3>The Meridian Combine</h3>
+              <p>Director Vex’s Combine harvests Planet Cores to assemble the “Perfect Sphere” — a manufactured world built to remove everything wild and unpredictable. Their infrastructure is the target on every enemy world.</p>
+            </article>
+            <article class="wiki-entry">
+              <h3>Rin, Pip, and the Cores</h3>
+              <p>Rin is a practical patchrunner who fixes what breaks. Pip, a living core-spark, tracks the stolen energy trail. Together they learn that the Cores stabilize the whole system — and losing them makes every orbit less safe.</p>
+            </article>
+          </div>
+          <button id="return-main-menu-btn" class="menu-text-btn">Return to main menu</button>
+          <div class="menu-footer">Press P or ESC to resume</div>
+        </div>
+      </section>
+
+      <!-- Victory / Result Screen -->
+      <div id="victory-modal" class="modal-overlay hidden">
+        <div class="modal-card victory-card">
+          <div class="badge-victory">PLANET LIBERATED</div>
+          <h1 class="modal-title">INVASION SUMMARY</h1>
+          <div class="victory-stars" id="victory-stars" style="margin: 10px 0;">⭐⭐⭐</div>
+          <p class="modal-desc" id="victory-summary">
+            Flawless liberation! Your supply chains flowed, your troops grew strong, and companions survived the battle.
+          </p>
+
+          <div class="stats-grid" id="victory-stats-grid">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <button id="play-again-btn" class="primary-btn btn-shine">
+            <span>CONTINUE TO HOME PLANET</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
